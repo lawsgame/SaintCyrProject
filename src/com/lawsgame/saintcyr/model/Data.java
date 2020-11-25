@@ -5,9 +5,23 @@ public class Data {
     public static final float HITRATE_MELEE_BASE = 0.20f;
     public static final float HITRATE_EXHAUSTION_FACTOR = 0.5f;
 
+    public static final float DIS_AUTH_FACTOR = 1f;
+    public static final float MORAL_BRA_FACTOR = 3f;
+    public static final float MORAL_CHA_FACTOR = 2f;
     public static final float MORAL_DAMAGE_BASE_VALUE = 1f;
     public static final float MORAL_DAMAGE_CASUALTY_FACTOR = 2f;
     public static final float MORAL_DAMAGE_EXHAUSTION_FACTOR = 1f;
+
+    public enum Trait {
+
+    }
+
+    public enum Rank {
+        COLONEL,
+        BRIGADE_GENERAL,
+        DIVISION_GENERAL,
+        CORPS_GENERAL;
+    }
 
     public enum UnitCorps {
         INFANTRY,

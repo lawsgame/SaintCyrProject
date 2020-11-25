@@ -13,7 +13,7 @@ public class BattleSystem {
         float numerousFactor = (float) Math.log10(Math.sqrt(opponent.getCurrentStrength()));
         rawHitRate *= numerousFactor;
         if(onCounterCharge){
-            float discipleFactor = Math.min(1f, regiment.getDisciple() / 20.0f);
+            float discipleFactor = Math.min(2f, regiment.getDisciple() / 10.0f);
             rawHitRate *= (discipleFactor > 0) ? discipleFactor : 0;
         }
 
@@ -136,6 +136,11 @@ public class BattleSystem {
         if(!initiator.isShaken()) {
             doMeleeAttack(initiator, target, onCharge);
             log(initiator, target);
+
+            if(!target.isShaken() && !onCharge){
+                doMeleeAttack(target, initiator, onCharge);
+                log(initiator, target);
+            }
         }
     }
 
