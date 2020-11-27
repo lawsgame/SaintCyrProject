@@ -8,58 +8,50 @@ public class BattleSystem {
 
 
     public static float calcRangeHitRate(Regiment regiment, Regiment opponent, boolean onCounterCharge) {
-
-        float rawHitRate = regiment.getRangeHitRate(true);
+        float baseHR = regiment.getRangeHitRate(true, onCounterCharge);
         float numerousFactor = (float) Math.log10(Math.sqrt(opponent.getCurrentStrength()));
-        rawHitRate *= numerousFactor;
-        if(onCounterCharge){
-            float discipleFactor = Math.min(2f, regiment.getDisciple() / 10.0f);
-            rawHitRate *= (discipleFactor > 0) ? discipleFactor : 0;
-        }
-
         float avoidRate = regiment.getRangeAvoid(true);
-
-        return (rawHitRate  - avoidRate > 0.01f) ? rawHitRate  - avoidRate: 0.01f;
+        return baseHR * numerousFactor * (1 - avoidRate);
     }
 
 
     public static float calcRangeWoundRate(Regiment regiment, Regiment opponent, boolean onCounterCharge){
-        float rawWoundRate = regiment.getRangeWoundRate(true);
-        float resilienceRate = opponent.getWoundResilience(true);
-        return (rawWoundRate - resilienceRate > 0.01f) ? rawWoundRate - resilienceRate : 0.01f ;
+        float baseWR = regiment.getRangeWoundRate(true);
+        float armorRate = opponent.getRangeArmorRate(true);
+        return baseWR * (1 - armorRate) ;
     }
 
 
     public static int calcVolleysAgainstCharge(Regiment charged, Regiment charging){
-        return (int) (charged.type().getRange() / (5 * charging.getCombatSpeed(true)));
+        return 1 + (int) (charged.type().getRange() / (Data.COUNTER_CHARGE_SPEED_RANGE_FACTOR * charging.getCombatSpeed(true)));
     }
 
 
 
     public static int[] calcRangeExpectedDead(Regiment regiment, Regiment opponent, boolean onCounterCharge){
         float firepower = calcRangeHitRate(regiment, opponent, onCounterCharge) * calcRangeWoundRate(regiment, opponent, onCounterCharge);
-        return MathTools.calcBinomialLawExpectation((int)regiment.getCurrentStrength(), firepower);
+        return MathTools.calcBinomialLawExpectation((int) regiment.getCurrentStrength(), firepower);
     }
 
 
     private static float calcMeleeHitRate(Regiment attacker, Regiment defender, boolean onCharge) {
-        float rawHitRate = attacker.getMeleeHitRate(true, onCharge);
+        float baseHR = attacker.getMeleeHitRate(true, onCharge);
         float avoidRate = defender.getMeleeAvoid(true, onCharge);
-        return  (rawHitRate  - avoidRate > 0.01f) ? rawHitRate  - avoidRate: 0;
+        return baseHR * (1 - avoidRate);
     }
 
 
     private static float calcMeleeWoundRate(Regiment attacker, Regiment defender, boolean onCharge) {
-        float rawHitRate = attacker.getMeleeWoundRate(true, onCharge);
-        float avoidRate = defender.getWoundResilience(true);
-        return  (rawHitRate  - avoidRate > 0.01f) ? rawHitRate  - avoidRate: 0;
+        float baseWR = attacker.getMeleeWoundRate(true, onCharge);
+        float armorRate = defender.getMeleeArmorRate(true);
+        return  baseWR * (1 - armorRate);
     }
 
 
     public static int[] calcMeleeExpectedDead(Regiment regiment, Regiment opponent, boolean onCharge){
         float hitRate = calcMeleeHitRate(regiment, opponent, onCharge);
         float woundRate = calcMeleeWoundRate(regiment, opponent, onCharge);
-        return MathTools.calcBinomialLawExpectation((int) regiment.getCurrentStrength(), hitRate*woundRate);
+        return MathTools.calcBinomialLawExpectation((int) regiment.getCurrentStrength(), hitRate * woundRate);
     }
 
     public static int calcMoralDamageGrossOutput(Regiment attacker, Regiment defender, int casualties){
@@ -68,12 +60,12 @@ public class BattleSystem {
         return (int) (casualties * (Data.MORAL_DAMAGE_BASE_VALUE + strengthFactor + fatigueFactor));
     }
 
-    public static int calcMoralDamageResilience(Regiment attacker, Regiment defender){
+    public static int calcDefenderDisciple(Regiment attacker, Regiment defender){
         return (int) defender.getDisciple();
     }
 
     public static int calcMoralDamage(Regiment attacker, Regiment defender, int casualties){
-        int moralDamage = calcMoralDamageGrossOutput(attacker, defender, casualties) - calcMoralDamageResilience(attacker, defender);
+        int moralDamage = calcMoralDamageGrossOutput(attacker, defender, casualties) - calcDefenderDisciple(attacker, defender);
         return (moralDamage < 1 ) ? 1 : moralDamage;
     }
 
@@ -102,7 +94,7 @@ public class BattleSystem {
                 System.out.printf("\n%s is WIPED OUT\n", defender.getName());
             }else{
                 int moralDamageGrossOutput = calcMoralDamageGrossOutput(attacker, defender, woundedOnDefSide);
-                int moralResilience = calcMoralDamageResilience(attacker, defender);
+                int moralResilience = calcDefenderDisciple(attacker, defender);
                 int moralDamageNetOutput = calcMoralDamage(attacker, defender, woundedOnDefSide);
                 defender.setCurrentMoral(defender.getCurrentMoral() - moralDamageNetOutput);
                 System.out.printf("Moral damage inflicted (%s = %s - %s)\n ",moralDamageNetOutput,  moralDamageGrossOutput, moralResilience);
@@ -160,7 +152,7 @@ public class BattleSystem {
                 System.out.printf("\n%s is WIPED OUT\n", defender.getName());
             }else{
                 int moralDamageGrossOutput = calcMoralDamageGrossOutput(attacker, defender, woundedOnDefSide);
-                int moralResilience = calcMoralDamageResilience(attacker, defender);
+                int moralResilience = calcDefenderDisciple(attacker, defender);
                 int moralDamageNetOutput = calcMoralDamage(attacker, defender, woundedOnDefSide);
                 defender.setCurrentMoral(defender.getCurrentMoral() - moralDamageNetOutput);
                 System.out.printf("Moral damage inflicted (%s = %s - %s)\n ",moralDamageNetOutput,  moralDamageGrossOutput, moralResilience);

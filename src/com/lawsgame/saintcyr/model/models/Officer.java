@@ -8,7 +8,7 @@ import java.util.List;
 public class Officer implements Model{
     private String name;
     private int age;
-    private Data.Rank rank;
+    private Data.OfficerRank rank;
 
     private float charisma;
     private float authority;
@@ -16,9 +16,9 @@ public class Officer implements Model{
 
     private List<Data.Trait> traits;
 
-    private static final Officer JOHN_DOE = create("no officer", 0, Data.Rank.COLONEL, 0,0,0);
+    private static final Officer JOHN_DOE = create("no officer", 0, Data.OfficerRank.COLONEL, 0,0,0);
 
-    public static Officer create(String name, int age, Data.Rank rank, float charisma, float authority, int commandment, Data.Trait... traits) {
+    public static Officer create(String name, int age, Data.OfficerRank rank, float charisma, float authority, int commandment, Data.Trait... traits) {
         Officer officer = new Officer();
         officer.name = name;
         officer.age = age;
@@ -55,11 +55,11 @@ public class Officer implements Model{
         this.age = age;
     }
 
-    public Data.Rank getRank() {
+    public Data.OfficerRank getRank() {
         return rank;
     }
 
-    public void setRank(Data.Rank rank) {
+    public void setRank(Data.OfficerRank rank) {
         this.rank = rank;
     }
 

@@ -3,23 +3,55 @@ package com.lawsgame.saintcyr.model.tools;
 import java.util.Random;
 
 public class MathTools {
+    private static boolean TEST = true;
 
     public static void main(String[] args) {
         try {
-            int n = 600;
-            float p = 0.1f;
-            for (int i = 0; i < 10; i++) {
+            // TEST : log-normal
+            // set params
 
-                long ts1 = System.nanoTime();
-                int nb1 = doBinomialLaw(n, p);
-                long ts2 =  System.nanoTime() - ts1;
+            float mean = 1f;
+            float sd = 4f;
+//            float mean = 0f;
+//            float sd = 1f;
+//            double logmean = Math.exp(mean + sd*sd/2);
+//            double logvar = (Math.exp(sd*sd) - 1)*Math.exp(2*mean  + sd*sd);
+//            System.out.println("Expected mean : "+logmean);
+//            System.out.println("Expected variance : "+logvar);
 
-                long ts3 = System.nanoTime();
-                int nb2 = doBinomialLawGauss(n, p);
-                long ts4 =  System.nanoTime() - ts3;
+//            if(TEST){
+//                double meanNormal = Math.log(logmean*logmean / Math.sqrt(logmean*logmean  + logvar));
+//                double sdNormal = Math.sqrt(Math.log(1 + (logvar)/(logmean*logmean)));
+//                System.out.printf("log normal (%s, %s) => normal (%s, %s)\n", logmean, Math.sqrt(logvar), meanNormal, sdNormal);
+//                return;
+//            }
 
-                System.out.printf("(%s) in %s us <<VS>> (%s) in %s us\n", nb1, ts2/1000L, nb2, ts4/1000L);
+
+            // fetch p values
+
+            float calmean;
+            float calvar;
+            float sum = 0;
+            float squareSum = 0;
+
+            int p = 500;
+            float[] calvals = new float[p];
+            for (int i = 0; i < p; i++) {
+                calvals[i] = logNormal(mean, sd);
+                sum += calvals[i];
             }
+            calmean = sum / p;
+
+            // calculate mean and var
+
+            for(int i = 0; i < p; i++){
+                squareSum += (calmean - calvals[i])*(calmean - calvals[i]);
+            }
+            calvar = squareSum / (p - 1f);
+
+            System.out.println("Computed mean : "+calmean);
+            System.out.println("Computed variance : "+calvar);
+
         }catch( MathToolsException e){
             e.printStackTrace();
         }
@@ -52,19 +84,19 @@ public class MathTools {
      * @return
      * @throws MathToolsException
      */
-    public static int doBinomialLawGauss(int n, float p) throws MathToolsException{
-        if(p < 0 || 1 < p){
-            throw new MathToolsException("p is not a probability :"+p);
-        }else if(n  < 1){
+    public static int doBinomialLawGauss(int n, float p) throws MathToolsException {
+        if (p < 0 || 1 < p) {
+            throw new MathToolsException("p is not a probability :" + p);
+        } else if (n < 1) {
             return 0;
         }
         double mean = n * p;
         double standardDeviation = Math.sqrt(mean * (1 - p));
         double nbSuccesses = mean + standardDeviation * rand.nextGaussian();
-        if(nbSuccesses < 0){
+        if (nbSuccesses < 0) {
             nbSuccesses = 0.0;
         }
-        return (int)nbSuccesses;
+        return (int) nbSuccesses;
 
     }
 
@@ -113,6 +145,25 @@ public class MathTools {
             res *= x;
         }
         return res;
+    }
+
+    public static float logNormal(double logmean, double logsd) throws MathToolsException{
+
+        if(logsd < 0 ) {
+            throw new MathToolsException("standard deviation lesser than 0 ("+logsd+")");
+        }
+        double meanNormal = Math.log(logmean*logmean / Math.sqrt(logmean*logmean  + logsd*logsd));
+        double sdNormal = Math.sqrt(Math.log(1 + (logsd*logsd)/(logmean*logmean)));
+
+//        double meanNormal = mean;
+//        double sdNormal = sd;
+
+        double normalRes = meanNormal + sdNormal * rand.nextGaussian();
+        double logNormalResult = Math.exp(normalRes);
+
+        System.out.printf("log normal (%s, %s) => normal (%s, %s) => logres: %s\n", logmean, Math.sqrt(logsd*logsd), meanNormal, sdNormal, (int)logNormalResult);
+
+        return (float) logNormalResult;
     }
 
     public static class MathToolsException extends Exception{

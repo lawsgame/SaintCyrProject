@@ -12,15 +12,25 @@ public class Data {
     public static final float MORAL_DAMAGE_CASUALTY_FACTOR = 2f;
     public static final float MORAL_DAMAGE_EXHAUSTION_FACTOR = 1f;
 
+    public static final float COUNTER_CHARGE_SPEED_RANGE_FACTOR = 5f;
+
+
     public enum Trait {
 
     }
 
-    public enum Rank {
+    public enum OfficerRank {
         COLONEL,
         BRIGADE_GENERAL,
         DIVISION_GENERAL,
         CORPS_GENERAL;
+    }
+
+    public enum UnitRank {
+        CORPS,
+        DIVISION,
+        BRIGADE,
+        REGIMENT;
     }
 
     public enum UnitCorps {
@@ -65,9 +75,9 @@ public class Data {
     }
 
     public enum UnitType {
-        FUSILIER(UnitCorps.INFANTRY ,600,5,13,20,70, 9,20, 5, 3, 0, 4,new UnitAbility[0]),
-        VOLTIGEUR(UnitCorps.INFANTRY,500,5,15,20,90, 5,20, 3, 3, 0, 5,new UnitAbility[0]),
-        CHASSEUR(UnitCorps.CAVALRY  ,300,5, 0, 0,  0,6, 25,21, 3, 0, 11,new UnitAbility[0])
+        FUSILIER(UnitCorps.INFANTRY ,600,5,13,20,70, 19,20, 5, 3, 0, 4,new UnitAbility[0]),
+        VOLTIGEUR(UnitCorps.INFANTRY,500,5,15,20,90, 15,20, 3, 3, 0, 5,new UnitAbility[0]),
+        CHASSEUR(UnitCorps.CAVALRY  ,300,5, 0, 0,  0,21, 25,22, 3, 0, 11,new UnitAbility[0])
         ;
 
         private final UnitCorps corps;

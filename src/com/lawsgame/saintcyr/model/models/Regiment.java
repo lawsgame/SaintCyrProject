@@ -101,22 +101,27 @@ public class Regiment implements Model {
     }
 
     public float getCombatSpeed(boolean current){
-        float initialCS = type.getSpeed() * formation.getCombatSpeedFactor();
-        return initialCS;
+        float baseCS = type.getSpeed();
+        float formationFactor = formation.getCombatSpeedFactor();
+        return baseCS * formationFactor;
     }
 
     public float getEnergy(boolean current){
         return type.getEndurance();
     }
 
-    public float getRangeHitRate(boolean current) {
-        float initialHR = formation.getFireHitRateFactor() * type.getFireAbility()/100.0f;
+    public float getRangeHitRate(boolean current, boolean onCounterCharge) {
+        float baseHR = type.getFireAbility()/100.0f;
         float charismaBonus = commandingOfficer.getCharisma() / 100.0f;
         float exhaustionFactor = 1f;
-        if(current) {
-            exhaustionFactor = isExhausted() ? 0.5f : 1f;
+        float ccFactor = 1f;
+        if(onCounterCharge){
+            ccFactor = Math.min(1.0f, getDisciple()/20f);
         }
-        return (initialHR + charismaBonus)*exhaustionFactor ;
+        if(current) {
+            exhaustionFactor = isExhausted() ? Data.HITRATE_EXHAUSTION_FACTOR : 1f;
+        }
+        return (baseHR + charismaBonus) * formation.getFireHitRateFactor() * ccFactor * exhaustionFactor ;
     }
 
 
@@ -126,33 +131,38 @@ public class Regiment implements Model {
 
     public float getRangeWoundRate(boolean current) { return type.getFirePower()/100.0f; }
 
-    public float getMeleeHitRate(boolean current, boolean chargeOn){
-        float initialMeleeHR = Data.HITRATE_MELEE_BASE + (type.getMeleeAbility() + ((chargeOn)? type.getCharge() : 0))/100.0f;
+    public float getMeleeHitRate(boolean current, boolean charge){
+        float initialMeleeHR = (type.getMeleeAbility() + ((charge)? type.getCharge() : 0))/100.0f;
         float charismaBonus = commandingOfficer.getCharisma() / 100.0f;
         float exhaustionFactor = 1f;
         if(current) {
-            exhaustionFactor = isExhausted() ? 0.5f : 1f;
+            exhaustionFactor = isExhausted() ? Data.HITRATE_EXHAUSTION_FACTOR : 1f;
         }
-        return (initialMeleeHR + charismaBonus)*exhaustionFactor ;
+        return (initialMeleeHR + charismaBonus) * exhaustionFactor ;
     }
 
     public float getMeleeAvoid(boolean current, boolean chargedUpon){
-        float initialMeleeAvoid = type.getMeleeAbility()/100.0f;
-        initialMeleeAvoid *= (chargedUpon) ? formation.getChargeAvoid(): 1f;
-        if(current){
-            float exhaustionFactor = (isExhausted()) ? Data.HITRATE_EXHAUSTION_FACTOR : 1f;
-            return initialMeleeAvoid * exhaustionFactor;
+        float baseAvoM = type.getMeleeAbility()/100.0f;
+        float charismaBonus = commandingOfficer.getCharisma() / 100.0f;
+        float counterChargeFactor = 1f;
+        float exhaustionFactor = 1f;
+        if(chargedUpon){
+            counterChargeFactor = formation.getChargeAvoid();
         }
-        return initialMeleeAvoid;
+        if(current) {
+            exhaustionFactor = isExhausted() ? Data.HITRATE_EXHAUSTION_FACTOR : 1f;
+        }
+        return (baseAvoM + charismaBonus) * exhaustionFactor * counterChargeFactor ;
     }
 
     public float getMeleeWoundRate(boolean current, boolean chargeOn){
         return (type.getMeleePower() + ((chargeOn)? type.getCharge() : 0))/100.0f;
     }
 
-    public float getWoundResilience(boolean current){ return type.getArmor()/100.0f; }
+    public float getRangeArmorRate(boolean current){ return type.getArmor()/100.0f; }
+    public float getMeleeArmorRate(boolean current){ return type.getArmor()/100.0f; }
 
-    public int getFirePower(boolean current) { return (int) (((current) ? currentStrength : type.getStrength()) * getRangeHitRate(current) * getRangeWoundRate(current));}
+    public int getFirePower(boolean current) { return (int) (((current) ? currentStrength : type.getStrength()) * getRangeHitRate(current, false) * getRangeWoundRate(current));}
 
     public int getMeleePower(boolean current, boolean chargeOn) {
         float str =  (current) ? currentStrength :  type.getStrength();
@@ -165,35 +175,30 @@ public class Regiment implements Model {
     public boolean isExhausted() {return getEnergy(true) <= currentFatigue;}
     public float getMinMoral(){ return - getMoral() / 2f;}
 
-    @Override
-    public String toString(){
-        return String.format("%s [%s] | HP:(%s/%s) Moral:(%s/%s) Power: %s - %s (%s) Def: %s led by %s"
+
+    public String toLongString(){
+        return String.format("%s [%s]\n\tHP:%s/%s\n\tMoral:%s/%s\n\tEnergy: %s/%s\n\tPower: %s - %s(%s)\n\tArmor: (%s/%s)\n\tLed by %s"
                 , name
                 , type.name()
                 , (int) currentStrength
                 , (int) type.getStrength()
                 , (int) currentMoral
                 , (int) getMoral()
+                , (int) getEnergy(false)
+                , (int) currentFatigue
                 , getFirePower(false)
                 , getMeleePower(false, false)
                 , getMeleePower(false, true)
-                , getWoundResilience(false)
+                , getRangeArmorRate(false)
+                , getMeleeArmorRate(false)
                 , regimentCommander.toString());
     }
 
-
-    public String toLongString() {
-        final StringBuilder sb = new StringBuilder(this.toString());
-        sb.append(" > {name=").append(name);
-        sb.append(", currentStrength=").append(currentStrength);
-        sb.append(", moral=").append(getMoral());
-        sb.append(", currentMoral=").append(currentMoral);
-        sb.append(", shaken=").append(isShaken());
-        sb.append(", demoralized=").append(isDemoralized());
-        sb.append(", disciple=").append(getDisciple());
-        sb.append(", fatigue=").append(currentFatigue);
-        sb.append('}');
-        sb.append("\n > type = ").append(type);;
-        return sb.toString();
+    @Override
+    public String toString() {
+        return String.format("%s [%s] led by %s"
+                , name
+                , type.name()
+                , regimentCommander.toString());
     }
 }
