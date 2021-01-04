@@ -6,55 +6,6 @@ public class MathTools {
     private static boolean TEST = true;
 
     public static void main(String[] args) {
-        try {
-            // TEST : log-normal
-            // set params
-
-            float mean = 1f;
-            float sd = 4f;
-//            float mean = 0f;
-//            float sd = 1f;
-//            double logmean = Math.exp(mean + sd*sd/2);
-//            double logvar = (Math.exp(sd*sd) - 1)*Math.exp(2*mean  + sd*sd);
-//            System.out.println("Expected mean : "+logmean);
-//            System.out.println("Expected variance : "+logvar);
-
-//            if(TEST){
-//                double meanNormal = Math.log(logmean*logmean / Math.sqrt(logmean*logmean  + logvar));
-//                double sdNormal = Math.sqrt(Math.log(1 + (logvar)/(logmean*logmean)));
-//                System.out.printf("log normal (%s, %s) => normal (%s, %s)\n", logmean, Math.sqrt(logvar), meanNormal, sdNormal);
-//                return;
-//            }
-
-
-            // fetch p values
-
-            float calmean;
-            float calvar;
-            float sum = 0;
-            float squareSum = 0;
-
-            int p = 500;
-            float[] calvals = new float[p];
-            for (int i = 0; i < p; i++) {
-                calvals[i] = logNormal(mean, sd);
-                sum += calvals[i];
-            }
-            calmean = sum / p;
-
-            // calculate mean and var
-
-            for(int i = 0; i < p; i++){
-                squareSum += (calmean - calvals[i])*(calmean - calvals[i]);
-            }
-            calvar = squareSum / (p - 1f);
-
-            System.out.println("Computed mean : "+calmean);
-            System.out.println("Computed variance : "+calvar);
-
-        }catch( MathToolsException e){
-            e.printStackTrace();
-        }
 
     }
 
@@ -84,7 +35,7 @@ public class MathTools {
      * @return
      * @throws MathToolsException
      */
-    public static int doBinomialLawGauss(int n, float p) throws MathToolsException {
+    private static int doBinomialLawGauss(int n, float p) throws MathToolsException {
         if (p < 0 || 1 < p) {
             throw new MathToolsException("p is not a probability :" + p);
         } else if (n < 1) {
@@ -107,7 +58,7 @@ public class MathTools {
      * @param p : probability of success
      * @return number of successes
      */
-    public static int doBinomialLawExperiment(int n, float p) throws MathToolsException{
+    private static int doBinomialLawExperiment(int n, float p) throws MathToolsException{
         int nbSuccesses = 0;
         if(p < 0 || 1 < p){
             throw new MathToolsException("p is not a probability :"+p);
@@ -123,6 +74,9 @@ public class MathTools {
         return nbSuccesses;
     }
 
+    public static float gauss(float mean, float standardDeviation) {
+        return (float) (mean + standardDeviation * rand.nextGaussian());
+    }
 
     public static float fact(int n) throws MathToolsException{
         if(n<0){
@@ -154,10 +108,6 @@ public class MathTools {
         }
         double meanNormal = Math.log(logmean*logmean / Math.sqrt(logmean*logmean  + logsd*logsd));
         double sdNormal = Math.sqrt(Math.log(1 + (logsd*logsd)/(logmean*logmean)));
-
-//        double meanNormal = mean;
-//        double sdNormal = sd;
-
         double normalRes = meanNormal + sdNormal * rand.nextGaussian();
         double logNormalResult = Math.exp(normalRes);
 

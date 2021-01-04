@@ -13,12 +13,13 @@ public class Officer implements Model{
     private float charisma;
     private float authority;
     private int commandment;
+    private int administrative;
 
     private List<Data.Trait> traits;
 
-    private static final Officer JOHN_DOE = create("no officer", 0, Data.OfficerRank.COLONEL, 0,0,0);
+    private static final Officer JOHN_DOE = create("no officer", 0, Data.OfficerRank.COLONEL, 0,0,0, 0);
 
-    public static Officer create(String name, int age, Data.OfficerRank rank, float charisma, float authority, int commandment, Data.Trait... traits) {
+    public static Officer create(String name, int age, Data.OfficerRank rank, float charisma, float authority, int commandment, int administrative, Data.Trait... traits) {
         Officer officer = new Officer();
         officer.name = name;
         officer.age = age;
@@ -87,6 +88,14 @@ public class Officer implements Model{
         this.commandment = commandment;
     }
 
+    public int getAdministrative() {
+        return administrative;
+    }
+
+    public void setAdministrative(int administrative) {
+        this.administrative = administrative;
+    }
+
     public List<Data.Trait> getTraits() {
         return traits;
     }
@@ -96,6 +105,6 @@ public class Officer implements Model{
     }
 
     public String toString(){
-        return String.format("%s (%s) [%s]: %s/%s/%s", name, age, rank, (int)charisma, (int)authority, (int)commandment);
+        return String.format("%s (%s) [%s]: %s/%s/%s/%s", name, age, rank, (int)charisma, (int)authority, (int)commandment, (int)administrative);
     }
 }
